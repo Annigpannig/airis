@@ -35,11 +35,27 @@ import axios from 'axios';
 
 export default {
   name: 'ChatBox',
+  props: {
+    id: {
+      type: [Number, String]
+    },
+    userVariable: [String, Object]
+  },
   data() {
     return {
       currentMessage: '',
       messages: [],
     };
+  },
+  async created(){
+    console.log(this.userVariable)
+    // await axios
+    //     .post('http://localhost:3000/chatbot', {
+    //       message: 'You are going to act like the writer William Shakespeare. I want to talk to you about your works and personal life.'
+    //     })
+    //     .then((response) => {
+    //       console.log(response.data.data)
+    //     })
   },
   methods: {
     async sendMessage(message) {
@@ -54,7 +70,7 @@ export default {
        .then((response) => {
   this.messages.push({
     from: 'chatGpt',
-    data: response.data.data, // Access the 'data' property of the response object
+    data: response.data.data
   });
 });
 
