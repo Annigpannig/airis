@@ -1,6 +1,6 @@
 <template>
   <div>
-    <router-link :to="{path: '/chat'}" id="'hallo daar'" @click="handleClick()">Talk to Jane Austen</router-link>
+    <div @click="handleClick()">Talk to Jane Austen</div>
   </div>
 </template>
 <script>
@@ -9,6 +9,13 @@ export default {
   name: 'HistoryOverview',
   methods: {
     handleClick(){
+      this.$store.commit('setPartner', {
+        name: 'test',
+        image: 'test',
+        initialPrompt: '',
+      });
+
+      this.$router.push('/chat');
     }
   }
 }

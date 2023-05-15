@@ -48,7 +48,7 @@ export default {
     };
   },
   async created(){
-    console.log(this.userVariable)
+    console.log(this.$store.state.chatPartner)
     // await axios
     //     .post('http://localhost:3000/chatbot', {
     //       message: 'You are going to act like the writer William Shakespeare. I want to talk to you about your works and personal life.'
