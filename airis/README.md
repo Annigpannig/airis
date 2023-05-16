@@ -5,14 +5,15 @@
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Run frontend
 ```
-npm run serve
+run npm run serve command
+go to localhost:8080
 ```
 
-### Compiles and minifies for production
+### Run backend
 ```
-npm run build
+run node index.js command
 ```
 
 ### Lints and fixes files

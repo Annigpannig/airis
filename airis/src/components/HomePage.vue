@@ -6,6 +6,10 @@
     </div>
     <Banner title="Elevate Your Learning Experience" subtitle="Connect with Historical Figures and Practice Real-Life Scenarios" :hasButton="true"></Banner>
     <ContentBlock v-for="block in contentBlockData" :key="block.title" :image-url="block.imageUrl" :title="block.title" :subtitle="block.subtitle" :imageRight="block.imageRight"></ContentBlock>
+    <div class="bottom-cta">
+      <h1>Get started</h1>
+      <button class="button bottom"><router-link to="/content">Start now</router-link></button>
+    </div>
   </div>
 </template>
 <script>
@@ -61,6 +65,14 @@ export default {
       color: white;
       text-decoration: none;
     }
+  }
+  .bottom-cta {
+    font-family: "Inter", "Inter Placeholder", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+
   }
 
   :nth-of-type(3){
