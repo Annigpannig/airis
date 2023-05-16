@@ -1,5 +1,4 @@
-// import App from "@/App.vue";
-import HistoryOverview from "@/components/HistoryOverview.vue";
+import ContentOverview from "@/components/ContentOverview.vue";
 import ChatBox from "@/components/ChatBox.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
@@ -9,7 +8,7 @@ Vue.use(VueRouter);
 
 const routes = [
     { path: '/', component: HomePage},
-    { path: '/history', component: HistoryOverview},
+    { path: '/content', component: ContentOverview},
     { name: "chat", path: '/chat', component: ChatBox, props: true }
 ]
 

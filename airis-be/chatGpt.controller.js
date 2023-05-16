@@ -1,34 +1,22 @@
-const { Configuration, OpenAIApi } = require("openai");
+const {Configuration, OpenAIApi} = require("openai");
 require("dotenv").config();
 
 const askToChatGpt = async function (req, res) {
-  const openAIInstance = await _createOpenAIInstance();
-
-  await openAIInstance
-    .createCompletion({
-      model: "text-davinci-003",
-      prompt: req.body.message,
-      temperature: 0,
-      max_tokens: 500,
-    })
-    .then((response) => {
-      const repliedMessage = response.data.choices[0].text;
-      res.send({ from: "chatGpt", data: repliedMessage });
-    })
-    .catch((error) => {
-      // Report error
-      console.log("Error ", error);
+    const configuration = new Configuration({
+        apiKey: process.env.CHATGPT_TOKEN,
+        organization: "org-FO4ywCBKoSlPd6MjVCFgki68",
     });
-};
-
-const _createOpenAIInstance = async () => {
-  const conf = await new Configuration({
-      organization: "org-FO4ywCBKoSlPd6MjVCFgki68",
-      apiKey: process.env.CHATGPT_TOKEN,
-  });
-  return await new OpenAIApi(conf);
+    const openai = new OpenAIApi(configuration);
+    const completion = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: req.body.message,
+        max_tokens: 256,
+        temperature: 0.7,
+        presence_penalty: 0
+    })
+    res.send({from: "chatGpt", data: completion.data.choices[0].message});
 };
 
 module.exports = {
-  askToChatGpt,
+    askToChatGpt,
 };

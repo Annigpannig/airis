@@ -1,33 +1,54 @@
-
 <template>
-    <div class="chatbox-container">
-<div class="container">
-  <h1>Ai Chat Bot</h1>
-<div class="messageBox mt-8">
-  <div v-for="(message, index) in messages" :key="index">
-    <div :class="message.from == 'user' ? 'messageFromUser' : 'messageFromChatGpt'">
-      <div :class="message.from == 'user' ? 'userMessageWrapper' : 'chatGptMessageWrapper'">
-        <div :class="message.from == 'user' ? 'userMessageContent' : 'chatGptMessageContent'">{{ message.data }}</div>
+  <div class="chatbox-container">
+    <div class="container">
+      <div class="info">
+        <div class="top-info">
+          <div class="arrow" @click="$router.push('/content')"></div>
+          <div>
+            <div class="title">{{ chatPartner.name }}</div>
+            <div class="subtitle">{{ chatPartner.subtitle }}</div>
+          </div>
+        </div>
+        <div class="divider"/>
+        <img :src="chatPartner.image"/>
+        <div class="info-text">
+          <div class="info-header">
+            {{ chatPartner.infoHeader }}
+          </div>
+          <div class="info-body" v-html="chatPartner.infoBody"/>
+        </div>
+      </div>
+      <div class="messageBox mt-8">
+        <div v-for="(message, index) in limitedMessages" :key="index" ref="chatbox">
+          <div :class="message.role == 'user' ? 'messageFromUser' : 'messageFromChatGpt'">
+            <div :class="message.role == 'user' ? 'userMessageWrapper' : 'chatGptMessageWrapper'">
+              <div :class="message.role == 'user' ? 'userMessageContent' : 'chatGptMessageContent'">
+                <div v-html="message.content.response"/>
+                <div class="correction"
+                     v-if="message.content.correction && message.content.correction !== 'N/A' && message.content.correction !== 'No corrections needed'">
+                  <span>Correction: </span><span v-html="message.content.correction"/></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    <div class="input-bar">
+      <input
+          v-model="currentMessage"
+          type="text"
+          class="messageInput"
+          placeholder="Chat away!"
+          @keyup.enter="sendMessage(currentMessage)"
+      />
+      <button
+          @click="sendMessage(currentMessage)"
+          class="askButton"
+      >
+        Send message
+      </button>
+    </div>
   </div>
-</div>
-<div class="inputContainer">
-  <input
-    v-model="currentMessage"
-    type="text"
-    class="messageInput"
-    placeholder="Ask me anything..."
-  />
-  <button
-    @click="sendMessage(currentMessage)"
-    class="askButton"
-  >
-    Ask
-  </button>
-</div>
-</div>
-</div>
 </template>
 
 <script>
@@ -35,161 +56,153 @@ import axios from 'axios';
 
 export default {
   name: 'ChatBox',
-  props: {
-    id: {
-      type: [Number, String]
-    },
-    userVariable: [String, Object]
-  },
   data() {
     return {
       currentMessage: '',
       messages: [],
+      chatHistory: []
     };
   },
-  async created(){
-    console.log(this.$store.state.chatPartner)
-    // await axios
-    //     .post('http://localhost:3000/chatbot', {
-    //       message: 'You are going to act like the writer William Shakespeare. I want to talk to you about your works and personal life.'
-    //     })
-    //     .then((response) => {
-    //       console.log(response.data.data)
-    //     })
+  async created() {
+    this.messages.push({
+      role: 'user',
+      content: this.chatPartner.initialPrompt,
+    });
+    this.chatHistory.push({
+      role: 'user',
+      content: this.chatPartner.initialPrompt,
+    });
+    await axios
+        .post('http://localhost:3000/chatbot', {
+          message: this.chatHistory
+        })
+        .then((response) => {
+          const data = JSON.parse(response.data.data.content);
+          this.chatHistory.push(response.data.data);
+          this.messages.push({content: data, role: response.data.data.role});
+        })
+  },
+  computed: {
+    chatPartner() {
+      return this.$store.state.chatPartner;
+    },
+    limitedMessages() {
+      return this.messages.slice(1);
+    }
   },
   methods: {
     async sendMessage(message) {
+      this.currentMessage = '';
       this.messages.push({
-        from: 'user',
-        data: message,
+        role: 'user',
+        content: {response: message},
       });
-      await axios
-        .post('http://localhost:3000/chatbot', {
-          message: message,
-        })
-       .then((response) => {
-  this.messages.push({
-    from: 'chatGpt',
-    data: response.data.data
-  });
-});
+      this.chatHistory.push({
+        role: 'user',
+        content: message,
+      });
 
+      await axios
+          .post('http://localhost:3000/chatbot', {
+            message: this.chatHistory,
+          })
+          .then((response) => {
+            const data = JSON.parse(response.data.data.content);
+            this.chatHistory.push(response.data.data);
+            this.messages.push({content: data, role: response.data.data.role});
+          });
     },
   },
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 
 .chatbox-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
+  height: 90%;
+
+  .input-bar {
+    padding-left: 415px;
+    background-color: #8B74A4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    input {
+      max-height: 40px;
+    }
+  }
 }
 
 .container {
-  width: 360px;
-  height: 600px;
+  width: 100%;
+  height: 100%;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: column;
   overflow: hidden;
   font-family: 'Roboto', sans-serif;
-}
 
-h1 {
-  font-size: 24px;
-  font-weight: 500;
-  text-align: center;
-  color: #222;
-  padding: 16px;
-  margin: 0;
-  background-color: #f7f7f7;
-  border-bottom: 1px solid #e7e7e7;
-}
+  .info {
+    width: 450px;
 
-.messageBox {
-  padding: 16px;
-  flex-grow: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+    .top-info {
+      display: flex;
+      padding: 15px;
 
-.messageFromUser,
-.messageFromChatGpt {
-  display: flex; }
+      .arrow {
+        height: 15px;
+        width: 15px;
+        margin-right: 10px;
+        align-self: center;
+        cursor: pointer;
+        background: url('../assets/arrow_left.svg') no-repeat;
+      }
 
+      .title {
+        color: #19181B;
+        font-size: 18px;
+        font-weight: 900;
+      }
 
+      .subtitle {
+        color: #B1ABBA;
+        font-weight: 450;
+        font-size: 12px;
+      }
+    }
 
-.messageBox {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 0 16px;
-  border-top: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f0f0f0;
-  flex-grow: 1;
-}
+    .divider {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
 
-.messageFromUser,
-.messageFromChatGpt {
-  display: flex;
-  margin-bottom: 8px;
-}
+    .info-text {
+      background-color: rgba(137, 82, 218, 0.05);
+      border-radius: 8px;
+      padding: 12px 8px;
+      margin: 8px;
 
-.userMessageWrapper,
-.chatGptMessageWrapper {
-  display: flex;
-  flex-direction: column;
-}
+      .info-header {
+        color: #19181B;
+        font-weight: 500;
+        font-size: 18px;
+        font-family: "Inter", "Inter Placeholder", sans-serif;
+        margin-bottom: 8px;
+      }
 
-.userMessageWrapper {
-  align-self: flex-end;
-}
+      .info-body {
+        color: #8952DA;
+        font-size: 14px;
+        font-weight: 450;
+      }
+    }
 
-.chatGptMessageWrapper {
-  align-self: flex-start;
-}
-
-.userMessageContent,
-.chatGptMessageContent {
-  max-width: 60%;
-  padding: 8px 12px;
-  border-radius: 18px;
-  margin-bottom: 2px;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.userMessageContent {
-  background-color: #1877F2;
-  color: white;
-  border-top-left-radius: 0;
-}
-
-.chatGptMessageContent {
-  background-color: #EDEDED;
-  color: #222;
-  border-top-right-radius: 0;
-}
-
-.userMessageTimestamp,
-.chatGptMessageTimestamp {
-  font-size: 10px;
-  color: #999;
-  margin-top: 2px;
-}
-
-.userMessageTimestamp {
-  align-self: flex-end;
-}
-
-.chatGptMessageTimestamp {
-  align-self: flex-start;
+    img {
+      width: 320px;
+      padding: 16px 40px;
+    }
+  }
 }
 
 .inputContainer {
@@ -197,6 +210,43 @@ h1 {
   align-items: center;
   padding: 8px;
   background-color: #f0f0f0;
+}
+
+.messageBox {
+  width: 100%;
+  background-color: #F2F0F5;
+  overflow-y: scroll;
+
+  .messageFromUser {
+    left: 46%;
+    position: relative;
+    max-width: 50%;
+  }
+
+  .messageFromChatGpt {
+    left: 5%;
+    position: relative;
+    max-width: 50%;
+  }
+
+  .userMessageContent {
+    margin: 20px 0px;
+    border-radius: 12px;
+    padding: 15px;
+    background-color: white;
+  }
+
+  .chatGptMessageContent {
+    margin: 20px 0px;
+    border-radius: 12px;
+    padding: 15px;
+    background-color: #B897E9;
+
+    .correction {
+      margin-top: 8px;
+      font-weight: 700;
+    }
+  }
 }
 
 .messageInput {
@@ -211,47 +261,17 @@ h1 {
 }
 
 .askButton {
-  background-color: #1877F2;
+  margin: 16px;
+  background-color: #B897E9;
+  box-shadow: inset 0px -4px 0px rgba(48, 36, 66, 0.2);
+  border-radius: 24px;
   color: white;
   font-size: 16px;
-  padding: 8px 16px;
+  padding: 12px;
   border: none;
   outline: none;
   cursor: pointer;
   border-radius: 24px;
   transition: background-color 0.3s ease-in-out;
-}
-
-.askButton:hover {
-  background-color: #145CB3;
-}
-
-@media (max-width: 480px) {
-  .container {
-    width: 100%;
-    max-width: none;
-    border-radius: 0;
-  }
-}
-.chatbox-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 1000;
-}
-
-
-.messageBox {
-  padding: 16px;
-  flex-grow: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.messageFromUser,
-.messageFromChatGpt {
-  display: flex;
 }
 </style>

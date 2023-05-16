@@ -5,8 +5,11 @@ const store = new Vuex.Store({
   state: {
     chatPartner: {
       name: '',
+      subtitle: '',
       image: '',
-      initialPrompt: ''
+      initialPrompt: '',
+      infoHeader: '',
+      infoBody: ''
     }
   },
   mutations: {
